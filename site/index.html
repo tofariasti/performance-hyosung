@@ -221,17 +221,7 @@
 
   <main>
     <section id="inicio" class="hero">
-      <div class="hero__bg hero__bg--collage" aria-hidden="true">
-        <div class="hero__bg-panel hero__bg-panel--main">
-          <img src="../assets/images/instagram/09-DBlvtvKuqyj.jpg" alt="Fachada Performance Hyosung — oficina Kasinski e Hyosung, Vila Jardim" loading="eager" fetchpriority="high" width="640" height="640" data-hero-collage="DBlvtvKuqyj" />
-        </div>
-        <div class="hero__bg-panel">
-          <img src="../assets/images/instagram/07-DCM2-2Ixvpf.jpg" alt="Motos na Performance Hyosung — oficina em Porto Alegre" loading="eager" width="640" height="800" data-hero-collage="DCM2-2Ixvpf" />
-        </div>
-        <div class="hero__bg-panel">
-          <img src="../assets/images/instagram/12-DBUbtRBxSaT.jpg" alt="Hyosung Performance — especializada em Kasinski e Hyosung" loading="eager" width="640" height="640" data-hero-collage="DBUbtRBxSaT" />
-        </div>
-      </div>
+      <div class="hero__bg hero__bg--mosaic" id="hero-mosaic" aria-hidden="true"></div>
       <div class="hero__overlay" aria-hidden="true"></div>
       <canvas id="hero-particles" aria-hidden="true"></canvas>
       <div id="speed-lines" aria-hidden="true"></div>
@@ -417,12 +407,12 @@
           <h2 class="section-title mt-2">Localização</h2>
           <p class="section-hook">Vila Jardim, Porto Alegre — fácil acesso para quem roda na região.</p>
         </div>
-        <div class="grid gap-8 lg:grid-cols-2">
-          <div class="location-card reveal">
+        <div class="location-grid grid gap-8 lg:grid-cols-2">
+          <div class="location-card location-card--map">
             <iframe
               class="location-card__map"
               title="Mapa — Performance Hyosung"
-              loading="lazy"
+              loading="eager"
               referrerpolicy="no-referrer-when-downgrade"
               src="https://maps.google.com/maps?q=Av.+Saturnino+de+Brito+385,+Vila+Jardim,+Porto+Alegre,+RS&hl=pt-BR&z=16&output=embed"
               allowfullscreen

@@ -73,20 +73,31 @@
     });
   }
 
+  function renderHeroMosaic() {
+    const container = document.getElementById('hero-mosaic');
+    const items = config.heroMosaic || [];
+    if (!container || !items.length) return;
+
+    container.innerHTML = items
+      .map(
+        (item, i) => `
+      <div class="hero__bg-tile hero__bg-tile--${escapeHtml(item.shape || 'square')}" data-shape="${escapeHtml(item.shape || 'square')}">
+        <img
+          src="${escapeHtml(assetUrl(item.imagem))}"
+          alt=""
+          loading="${i < 6 ? 'eager' : 'lazy'}"
+          ${i < 3 ? 'fetchpriority="high"' : ''}
+          width="640"
+          height="640"
+          data-hero-tile="${escapeHtml(item.shortcode)}"
+        />
+      </div>`
+      )
+      .join('');
+  }
+
   function applyHeroPoster() {
-    const collage = config.heroCollage || [];
-    if (collage.length) {
-      collage.forEach((item) => {
-        const img = document.querySelector(`[data-hero-collage="${item.shortcode}"]`);
-        if (!img) return;
-        img.src = assetUrl(item.imagem);
-        if (item.alt) img.alt = item.alt;
-      });
-    } else if (config.heroPoster) {
-      document.querySelectorAll('.hero__bg img').forEach((img) => {
-        img.src = assetUrl(config.heroPoster);
-      });
-    }
+    renderHeroMosaic();
 
     const sobreImg = document.querySelector('.sobre-visual img');
     if (sobreImg && config.sobreImagem) {
@@ -186,8 +197,8 @@
   function applyGaleriaPosts(posts) {
     if (!Array.isArray(posts) || !posts.length) return false;
     config.galeria = posts;
-    if ((config.heroCollage || []).length) {
-      config.heroCollage = config.heroCollage.map((item) => {
+    if ((config.heroMosaic || []).length) {
+      config.heroMosaic = config.heroMosaic.map((item) => {
         const fromJson = posts.find((p) => p.shortcode === item.shortcode);
         if (!fromJson) return item;
         return {
@@ -684,7 +695,7 @@
   }
 
   function initParallax() {
-    const heroBg = document.querySelector('.hero__bg--collage') || document.querySelector('.hero__bg');
+    const heroBg = document.querySelector('.hero__bg--mosaic') || document.querySelector('.hero__bg');
     if (!heroBg) return;
     window.addEventListener(
       'scroll',
