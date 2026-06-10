@@ -13,6 +13,7 @@
   --dark-950: #0a2463;
   --dark-900: #0c3266;
   --dark-800: #1e4a8a;
+  --header-height: 3.75rem;
 }
 
 .font-display { font-family: var(--font-display); }
@@ -42,8 +43,8 @@
 
 body.demo-standalone .site-header { top: var(--demo-bar-height); }
 body.demo-standalone .site-nav__mobile {
-  top: calc(var(--demo-bar-height) + 3.5rem);
-  inset: auto 0 0 0;
+  top: calc(var(--demo-bar-height) + var(--header-height));
+  height: calc(100dvh - var(--demo-bar-height) - var(--header-height));
 }
 
 /* Header */
@@ -53,6 +54,7 @@ body.demo-standalone .site-nav__mobile {
   left: 0;
   right: 0;
   z-index: 50;
+  overflow: visible;
   transition: background 0.35s, box-shadow 0.35s, border-color 0.35s;
 }
 
@@ -121,6 +123,30 @@ body.demo-standalone .site-nav__mobile {
   text-shadow: 0 0 12px rgba(0, 87, 184, 0.5);
 }
 
+.site-nav__actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.site-nav__ig {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.5rem;
+  color: white;
+  background: linear-gradient(135deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
+  box-shadow: 0 4px 16px rgba(220, 39, 67, 0.35);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.site-nav__ig:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(220, 39, 67, 0.5);
+}
+
 .site-nav__cta {
   display: none;
   align-items: center;
@@ -171,11 +197,20 @@ body.demo-standalone .site-nav__mobile {
 
 .site-nav__mobile {
   position: fixed;
-  inset: 3.5rem 0 0 0;
-  z-index: 40;
+  top: var(--header-height);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 49;
   background: var(--dark-950);
-  padding: 1.5rem;
+  padding: 1.5rem 1rem 2rem;
   overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+}
+
+.site-nav__mobile:not(.hidden) {
+  display: block;
 }
 
 .site-nav__mobile-list {
@@ -197,6 +232,10 @@ body.demo-standalone .site-nav__mobile {
   text-transform: uppercase;
   color: #e2e8f0;
   border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.site-nav__mobile-link--ig {
+  color: #e1306c;
 }
 
 .site-nav__mobile-link--cta {
@@ -635,6 +674,16 @@ body.demo-standalone .site-nav__mobile {
 }
 
 .proof-item:hover { transform: translateY(-4px); }
+
+.proof-item--link {
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.proof-item--link:hover strong {
+  color: #e1306c;
+}
 
 .proof-item__icon {
   display: flex;

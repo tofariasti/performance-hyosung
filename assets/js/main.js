@@ -65,11 +65,15 @@
   }
 
   function applyInstagramLinks() {
+    document.querySelectorAll('[data-instagram-label]').forEach((label) => {
+      label.textContent = config.instagram || '';
+    });
     document.querySelectorAll('[data-instagram]').forEach((el) => {
-      if (el.hasAttribute('data-instagram-label')) {
-        el.textContent = config.instagram || '';
+      if (el.tagName === 'A') {
+        el.href = config.instagramUrl || '#';
+        el.setAttribute('target', '_blank');
+        el.setAttribute('rel', 'noopener noreferrer');
       }
-      if (el.tagName === 'A') el.href = config.instagramUrl || '#';
     });
   }
 
@@ -607,6 +611,7 @@
 
     const setOpen = (open) => {
       menu.classList.toggle('hidden', !open);
+      menu.setAttribute('aria-hidden', String(!open));
       btn.setAttribute('aria-expanded', String(open));
       document.body.classList.toggle('menu-open', open);
     };
