@@ -5,23 +5,23 @@ module.exports = {
     extend: {
       colors: {
         brand: {
-          50: '#fff4eb',
-          100: '#ffe4cc',
-          400: '#ff8c33',
-          500: '#ff6b00',
-          600: '#e85d00',
-          700: '#c44d00',
+          50: '#e8f2fc',
+          100: '#cce4ff',
+          400: '#4da3ff',
+          500: '#0057b8',
+          600: '#003d82',
+          700: '#002d61',
         },
         steel: {
           500: '#64748b',
           700: '#334155',
-          800: '#1e293b',
-          900: '#0f172a',
-          950: '#0a0f1a',
+          800: '#1e4a8a',
+          900: '#0c3266',
+          950: '#0a2463',
         },
         accent: {
           red: '#e63946',
-          cyan: '#00d4ff',
+          cyan: '#4da3ff',
         },
       },
       fontFamily: {
@@ -40,8 +40,8 @@ module.exports = {
       },
       keyframes: {
         'pulse-glow': {
-          '0%, 100%': { boxShadow: '0 0 20px rgba(255, 107, 0, 0.35)' },
-          '50%': { boxShadow: '0 0 40px rgba(255, 107, 0, 0.65)' },
+          '0%, 100%': { boxShadow: '0 0 20px rgba(0, 87, 184, 0.35)' },
+          '50%': { boxShadow: '0 0 40px rgba(0, 87, 184, 0.65)' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0)' },

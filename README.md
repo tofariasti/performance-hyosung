@@ -55,6 +55,22 @@ Edite [`assets/js/config.js`](assets/js/config.js) para alterar:
 - Serviços, FAQ, galeria, marcas
 - SEO local (coordenadas, CEP)
 
+## Depoimentos (Google)
+
+Edite [`assets/data/google-reviews.json`](assets/data/google-reviews.json) para atualizar textos, nota média e link do Google Maps.
+
+## SEO
+
+- Meta tags, Open Graph, Twitter Cards e geo tags em `site/index.html`
+- JSON-LD unificado (`WebSite`, `AutoRepair`, `WebPage`, `FAQPage`, `BreadcrumbList`, `ItemList`, `Review`)
+- [`robots.txt`](robots.txt) — indexa `/site/`, bloqueia moldura de demo
+- [`sitemap.xml`](sitemap.xml) — URL canônica da landing
+- Configuração em [`assets/js/config.js`](assets/js/config.js) → bloco `seo`
+
+Ao publicar no domínio do cliente, atualize `siteUrl`, `seo.canonicalUrl` e defina `modoDemo: false`.
+
+Valide em [Rich Results Test](https://search.google.com/test/rich-results) e [Facebook Sharing Debugger](https://developers.facebook.com/tools/debug/).
+
 ## Documentação
 
 - [Pesquisa da empresa](docs/pesquisa.md)

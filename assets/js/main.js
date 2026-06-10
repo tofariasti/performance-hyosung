@@ -49,6 +49,19 @@
       el.setAttribute('target', '_blank');
       el.setAttribute('rel', 'noopener noreferrer');
     });
+    applyWhatsAppFloat();
+  }
+
+  const WHATSAPP_ICON =
+    '<path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.435 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>';
+
+  function applyWhatsAppFloat() {
+    const float = document.querySelector('.contact-float');
+    if (!float || !config.whatsappNumero) return;
+    float.classList.add('contact-float--whatsapp');
+    float.setAttribute('aria-label', 'WhatsApp');
+    const svg = float.querySelector('svg');
+    if (svg) svg.innerHTML = WHATSAPP_ICON;
   }
 
   function applyInstagramLinks() {
@@ -61,11 +74,20 @@
   }
 
   function applyHeroPoster() {
-    const poster = config.heroPoster;
-    if (!poster) return;
-    document.querySelectorAll('.hero__bg img').forEach((img) => {
-      img.src = assetUrl(poster);
-    });
+    const collage = config.heroCollage || [];
+    if (collage.length) {
+      collage.forEach((item) => {
+        const img = document.querySelector(`[data-hero-collage="${item.shortcode}"]`);
+        if (!img) return;
+        img.src = assetUrl(item.imagem);
+        if (item.alt) img.alt = item.alt;
+      });
+    } else if (config.heroPoster) {
+      document.querySelectorAll('.hero__bg img').forEach((img) => {
+        img.src = assetUrl(config.heroPoster);
+      });
+    }
+
     const sobreImg = document.querySelector('.sobre-visual img');
     if (sobreImg && config.sobreImagem) {
       sobreImg.src = assetUrl(config.sobreImagem);
@@ -161,20 +183,158 @@
       .join('');
   }
 
+  function applyGaleriaPosts(posts) {
+    if (!Array.isArray(posts) || !posts.length) return false;
+    config.galeria = posts;
+    if ((config.heroCollage || []).length) {
+      config.heroCollage = config.heroCollage.map((item) => {
+        const fromJson = posts.find((p) => p.shortcode === item.shortcode);
+        if (!fromJson) return item;
+        return {
+          ...item,
+          imagem: '/' + fromJson.imagem.replace(/^\//, ''),
+          alt: fromJson.alt || item.alt,
+        };
+      });
+    }
+
+    const sobrePost =
+      (config.sobreImagemShortcode && posts.find((p) => p.shortcode === config.sobreImagemShortcode)) ||
+      posts.find((p) => /oficina|reparação|organização|higienização|fachada/i.test(p.alt || '')) ||
+      posts[1] ||
+      posts[0];
+    if (sobrePost) config.sobreImagem = '/' + sobrePost.imagem.replace(/^\//, '');
+    return true;
+  }
+
   async function loadGaleriaFromJson() {
-    if ((config.galeria || []).length || !config.instagramPostsJson) return;
+    if ((config.galeria || []).length) {
+      applyGaleriaPosts(config.galeria);
+    }
+
+    const inline = document.getElementById('instagram-posts-data');
+    if (inline?.textContent?.trim()) {
+      try {
+        const data = JSON.parse(inline.textContent);
+        if (data.posts?.length) applyGaleriaPosts(data.posts);
+      } catch (_) {}
+    }
+
+    if (!config.instagramPostsJson) return;
     try {
       const res = await fetch(assetUrl(config.instagramPostsJson));
       if (!res.ok) return;
       const data = await res.json();
-      if (Array.isArray(data.posts) && data.posts.length) {
-        config.galeria = data.posts;
-        if (data.posts[0]) {
-          config.heroPoster = '/' + data.posts[0].imagem.replace(/^\//, '');
-          config.sobreImagem = '/' + (data.posts[1] || data.posts[0]).imagem.replace(/^\//, '');
-        }
-      }
+      if (data.posts?.length) applyGaleriaPosts(data.posts);
     } catch (_) {}
+  }
+
+  function reviewInitials(nome) {
+    return String(nome || '?')
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part.charAt(0))
+      .join('')
+      .toUpperCase();
+  }
+
+  function renderStars(count) {
+    const n = Math.max(0, Math.min(5, Number(count) || 5));
+    return '★★★★★'.slice(0, n);
+  }
+
+  function renderDepoimentos() {
+    const grid = document.getElementById('depoimentos-grid');
+    const lista = config.depoimentos || [];
+    if (!grid || !lista.length) return;
+
+    const googleIcon =
+      '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 01-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>';
+
+    grid.innerHTML = lista
+      .map(
+        (item, i) => `
+      <li class="review-card reveal" style="--reveal-delay:${(i % 3) * 0.1}s">
+        <div class="review-card__header">
+          <span class="review-card__avatar" aria-hidden="true">${escapeHtml(reviewInitials(item.nome))}</span>
+          <div>
+            <p class="review-card__name">${escapeHtml(item.nome)}</p>
+            <p class="review-card__badge">${escapeHtml(item.meta || 'Cliente Google')}</p>
+          </div>
+        </div>
+        <div class="review-card__stars" role="img" aria-label="${item.estrelas || 5} de 5 estrelas">${renderStars(item.estrelas)}</div>
+        <p class="review-card__when">${escapeHtml(item.quando || '')}</p>
+        <p class="review-card__text">${escapeHtml(item.texto)}</p>
+        <p class="review-card__source">${googleIcon} Avaliação no Google</p>
+      </li>`
+      )
+      .join('');
+  }
+
+  function applyGoogleReviewsData(data) {
+    if (!data) return;
+    if (Array.isArray(data.depoimentos) && data.depoimentos.length) {
+      config.depoimentos = data.depoimentos;
+    }
+    if (data.notaMedia) config.googleNotaMedia = data.notaMedia;
+    if (data.totalAvaliacoes) config.googleTotalAvaliacoes = data.totalAvaliacoes;
+    if (data.googleReviewUrl) config.googleReviewUrl = data.googleReviewUrl;
+  }
+
+  async function loadDepoimentosFromJson() {
+    if ((config.depoimentos || []).length) {
+      applyGoogleReviewsData({
+        depoimentos: config.depoimentos,
+        notaMedia: config.googleNotaMedia,
+        totalAvaliacoes: config.googleTotalAvaliacoes,
+        googleReviewUrl: config.googleReviewUrl,
+      });
+    }
+
+    if (!config.googleReviewsJson) return;
+    try {
+      const res = await fetch(assetUrl(config.googleReviewsJson));
+      if (!res.ok) return;
+      applyGoogleReviewsData(await res.json());
+    } catch (_) {}
+  }
+
+  function applyGoogleReviewData() {
+    document.querySelectorAll('[data-google-nota]').forEach((el) => {
+      el.textContent = String(config.googleNotaMedia ?? '4.6');
+    });
+    document.querySelectorAll('[data-google-total]').forEach((el) => {
+      el.textContent = String(config.googleTotalAvaliacoes ?? '20');
+    });
+    document.querySelectorAll('[data-google-review]').forEach((el) => {
+      if (config.googleReviewUrl) {
+        el.href = config.googleReviewUrl;
+        el.setAttribute('target', '_blank');
+        el.setAttribute('rel', 'noopener noreferrer');
+      }
+    });
+  }
+
+  function initReviewsAutoScroll() {
+    const grid = document.getElementById('depoimentos-grid');
+    if (!grid || window.matchMedia('(min-width: 1024px)').matches) return;
+
+    let direction = 1;
+    let paused = false;
+
+    grid.addEventListener('mouseenter', () => { paused = true; });
+    grid.addEventListener('mouseleave', () => { paused = false; });
+    grid.addEventListener('touchstart', () => { paused = true; }, { passive: true });
+    grid.addEventListener('touchend', () => { paused = false; }, { passive: true });
+
+    setInterval(() => {
+      if (paused || grid.scrollWidth <= grid.clientWidth) return;
+      const max = grid.scrollWidth - grid.clientWidth;
+      if (grid.scrollLeft >= max - 2) direction = -1;
+      if (grid.scrollLeft <= 2) direction = 1;
+      grid.scrollLeft += direction * 1.2;
+    }, 30);
   }
 
   function renderDiferenciais() {
@@ -188,7 +348,7 @@
   function renderFaq() {
     const list = document.getElementById('faq-list');
     const items = config.faq || [];
-    if (!list || !items.length || list.dataset.seoPrerendered === 'true') return;
+    if (!list || !items.length) return;
 
     list.innerHTML = items
       .map(
@@ -201,50 +361,231 @@
       .join('');
   }
 
-  function applyFaqSchema() {
-    const schemaEl = document.getElementById('schema-faq');
-    const items = config.faq || [];
-    if (!schemaEl || !items.length || schemaEl.dataset.seoPrerendered === 'true') return;
-
-    schemaEl.textContent = JSON.stringify({
-      '@context': 'https://schema.org',
-      '@type': 'FAQPage',
-      mainEntity: items.map((item) => ({
-        '@type': 'Question',
-        name: item.pergunta,
-        acceptedAnswer: { '@type': 'Answer', text: item.resposta },
-      })),
-    });
+  function absoluteUrl(path, base) {
+    if (!path) return '';
+    if (/^https?:\/\//i.test(path)) return path;
+    const clean = String(path).replace(/^\//, '');
+    const root = (base || '').replace(/\/$/, '');
+    if (root.endsWith('/site')) return `${root}/${clean}`;
+    return root ? `${root}/${clean}` : `/${clean}`;
   }
 
-  function applyLocalBusinessSchema() {
-    const schemaEl = document.getElementById('schema-local-business');
+  function resolveSiteBase() {
+    const seo = config.seo || {};
+    if (seo.canonicalUrl) return seo.canonicalUrl.replace(/\/$/, '');
+
+    if (location.hostname.endsWith('.github.io')) {
+      const parts = location.pathname.split('/').filter(Boolean);
+      const repo = parts[0];
+      if (repo && repo !== 'site' && repo !== 'assets') {
+        return `${location.origin}/${repo}/site`;
+      }
+      return `${location.origin}/site`;
+    }
+
+    if (config.siteUrl && !config.modoDemo) {
+      return config.siteUrl.replace(/\/$/, '');
+    }
+
+    return (config.githubPagesUrl || location.href).replace(/\/$/, '');
+  }
+
+  function setMetaContent(selector, value) {
+    if (!value) return;
+    const el = document.querySelector(selector);
+    if (el) el.setAttribute('content', value);
+  }
+
+  function applySeoMeta() {
+    const seo = config.seo || {};
+    const base = resolveSiteBase();
+
+    if (seo.title) document.title = seo.title;
+    if (seo.description) setMetaContent('meta[name="description"]', seo.description);
+    if (seo.keywords) setMetaContent('#seo-keywords', seo.keywords);
+    if (seo.themeColor) setMetaContent('meta[name="theme-color"]', seo.themeColor);
+
+    const robots = document.getElementById('seo-robots');
+    if (robots) {
+      const indexavel = seo.indexavel !== false;
+      robots.setAttribute(
+        'content',
+        indexavel
+          ? 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'
+          : 'noindex, nofollow'
+      );
+    }
+
+    const canonical = document.getElementById('seo-canonical');
+    if (canonical && base) canonical.setAttribute('href', `${base}/`);
+
+    setMetaContent('#seo-og-url', base ? `${base}/` : '');
+    setMetaContent('meta[property="og:title"]', seo.title || document.title);
+    setMetaContent('meta[property="og:description"]', seo.description);
+    const assetRoot = base.replace(/\/site$/, '');
+    const ogImageAbs = absoluteUrl(config.ogImage, assetRoot);
+    if (ogImageAbs) {
+      setMetaContent('#seo-og-image', ogImageAbs);
+      setMetaContent('#seo-twitter-image', ogImageAbs);
+    }
+    if (seo.twitterSite) setMetaContent('meta[name="twitter:site"]', seo.twitterSite);
+    setMetaContent('meta[name="twitter:title"]', seo.title || document.title);
+    setMetaContent('meta[name="twitter:description"]', seo.description);
+  }
+
+  function applyStructuredData() {
+    const schemaEl = document.getElementById('seo-jsonld');
     const local = config.seoLocal || {};
+    const seo = config.seo || {};
+    const base = resolveSiteBase();
     if (!schemaEl) return;
 
     try {
-      const schema = JSON.parse(schemaEl.textContent);
-      if (config.instagramUrl) schema.sameAs = [config.instagramUrl];
-      if (config.ogImage) schema.image = assetUrl(config.ogImage);
+      const data = JSON.parse(schemaEl.textContent);
+      const graph = data['@graph'];
+      if (!graph) return;
 
-      schema.address = {
-        '@type': 'PostalAddress',
-        streetAddress: local.streetAddress || config.endereco,
-        addressLocality: local.addressLocality || 'Porto Alegre',
-        addressRegion: local.addressRegion || 'RS',
-        addressCountry: local.addressCountry || 'BR',
-        postalCode: local.postalCode || config.cep,
-      };
+      const assetRoot = base.replace(/\/site$/, '');
 
-      if (local.geo) {
-        schema.geo = {
-          '@type': 'GeoCoordinates',
-          latitude: local.geo.latitude,
-          longitude: local.geo.longitude,
-        };
+      graph.forEach((node) => {
+        if (node['@id'] === '#website') {
+          node.url = `${base}/`;
+          node.name = config.nomeEmpresa || node.name;
+        }
+
+        if (node['@id'] === '#business') {
+          node.url = `${base}/`;
+          node.name = config.nomeEmpresa || node.name;
+          if (config.ogImage) node.image = absoluteUrl(config.ogImage, assetRoot);
+          if (config.logoUrl) node.logo = absoluteUrl(config.logoUrl, assetRoot);
+          if (config.whatsappNumero) node.telephone = `+${config.whatsappNumero}`;
+          if (config.instagramUrl) {
+            node.sameAs = [config.instagramUrl];
+            if (config.instagramDmUrl) node.sameAs.push(config.instagramDmUrl);
+          }
+          if (seo.googleMapsUrl || config.googleReviewUrl) {
+            node.hasMap = seo.googleMapsUrl || config.googleReviewUrl;
+          }
+          if (seo.knowsAbout) node.knowsAbout = seo.knowsAbout;
+
+          node.address = {
+            '@type': 'PostalAddress',
+            streetAddress: local.streetAddress || config.endereco,
+            addressLocality: local.addressLocality || 'Porto Alegre',
+            addressRegion: local.addressRegion || 'RS',
+            addressCountry: local.addressCountry || 'BR',
+            postalCode: local.postalCode || config.cep,
+            neighborhood: local.neighborhood || config.bairro,
+          };
+
+          if (local.geo) {
+            node.geo = {
+              '@type': 'GeoCoordinates',
+              latitude: local.geo.latitude,
+              longitude: local.geo.longitude,
+            };
+            node.areaServed = {
+              '@type': 'GeoCircle',
+              geoMidpoint: {
+                '@type': 'GeoCoordinates',
+                latitude: local.geo.latitude,
+                longitude: local.geo.longitude,
+              },
+              geoRadius: local.geoRadiusMeters || 30000,
+            };
+          }
+
+          if (local.openingHours) {
+            node.openingHoursSpecification = local.openingHours.map((h) => ({
+              '@type': 'OpeningHoursSpecification',
+              dayOfWeek: h.dayOfWeek,
+              opens: h.opens,
+              closes: h.closes,
+            }));
+          }
+
+          if (config.googleNotaMedia) {
+            node.aggregateRating = {
+              '@type': 'AggregateRating',
+              ratingValue: config.googleNotaMedia,
+              reviewCount: config.googleTotalAvaliacoes || config.depoimentos?.length || 1,
+              bestRating: 5,
+              worstRating: 1,
+            };
+          }
+
+          const reviews = (config.depoimentos || []).slice(0, 5);
+          if (reviews.length) {
+            node.review = reviews.map((r) => ({
+              '@type': 'Review',
+              author: { '@type': 'Person', name: r.nome || 'Cliente Google' },
+              reviewRating: {
+                '@type': 'Rating',
+                ratingValue: r.estrelas || 5,
+                bestRating: 5,
+                worstRating: 1,
+              },
+              reviewBody: r.texto,
+              publisher: { '@type': 'Organization', name: 'Google' },
+            }));
+          }
+        }
+
+        if (node['@id'] === '#webpage') {
+          node.url = `${base}/`;
+          node.name = seo.title || document.title;
+          node.description = seo.description;
+          if (config.ogImage) node.primaryImageOfPage = absoluteUrl(config.ogImage, assetRoot);
+        }
+
+        if (node['@id'] === '#faq') {
+          const items = config.faq || [];
+          if (items.length) {
+            node.mainEntity = items.map((item) => ({
+              '@type': 'Question',
+              name: item.pergunta,
+              acceptedAnswer: { '@type': 'Answer', text: item.resposta },
+            }));
+          }
+        }
+
+        if (node['@id'] === '#breadcrumb') {
+          node.itemListElement = [
+            { '@type': 'ListItem', position: 1, name: 'Início', item: `${base}/#inicio` },
+            { '@type': 'ListItem', position: 2, name: 'Serviços', item: `${base}/#servicos` },
+            { '@type': 'ListItem', position: 3, name: 'Avaliações', item: `${base}/#depoimentos` },
+            { '@type': 'ListItem', position: 4, name: 'Localização', item: `${base}/#localizacao` },
+          ];
+        }
+      });
+
+      const servicos = config.servicos || [];
+      const hasItemList = graph.some((n) => n['@id'] === '#servicos');
+      if (servicos.length && !hasItemList) {
+        graph.push({
+          '@type': 'ItemList',
+          '@id': '#servicos',
+          name: 'Serviços Performance Hyosung',
+          itemListElement: servicos.map((s, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            name: s.titulo,
+            description: s.descricao,
+          })),
+        });
+      } else if (hasItemList) {
+        const itemList = graph.find((n) => n['@id'] === '#servicos');
+        if (itemList) {
+          itemList.itemListElement = servicos.map((s, i) => ({
+            '@type': 'ListItem',
+            position: i + 1,
+            name: s.titulo,
+            description: s.descricao,
+          }));
+        }
       }
 
-      schemaEl.textContent = JSON.stringify(schema);
+      schemaEl.textContent = JSON.stringify(data);
     } catch (_) {}
   }
 
@@ -343,13 +684,13 @@
   }
 
   function initParallax() {
-    const hero = document.querySelector('.hero__bg img');
-    if (!hero) return;
+    const heroBg = document.querySelector('.hero__bg--collage') || document.querySelector('.hero__bg');
+    if (!heroBg) return;
     window.addEventListener(
       'scroll',
       () => {
         const offset = window.scrollY * 0.35;
-        hero.style.transform = `translateY(${offset}px) scale(1.08)`;
+        heroBg.style.transform = `translateY(${offset}px) scale(1.04)`;
       },
       { passive: true }
     );
@@ -406,7 +747,7 @@
         }
         ctx.beginPath();
         ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(255, 107, 0, ${p.alpha})`;
+        ctx.fillStyle = `rgba(77, 163, 255, ${p.alpha})`;
         ctx.fill();
       });
       requestAnimationFrame(draw);
@@ -439,18 +780,21 @@
 
   async function init() {
     await loadGaleriaFromJson();
+    await loadDepoimentosFromJson();
     applyContactLinks();
     applyInstagramLinks();
     applyContactData();
     applyHeroPoster();
     applyLogoImages();
+    applyGoogleReviewData();
+    applySeoMeta();
     renderMarcas();
     renderServicos();
     renderGaleria();
+    renderDepoimentos();
     renderDiferenciais();
     renderFaq();
-    applyFaqSchema();
-    applyLocalBusinessSchema();
+    applyStructuredData();
     initDemoExitBar();
     initMobileMenu();
     initHeaderScroll();
@@ -460,6 +804,7 @@
     initParallax();
     initSpeedLines();
     initParticles();
+    initReviewsAutoScroll();
   }
 
   document.addEventListener('DOMContentLoaded', init);

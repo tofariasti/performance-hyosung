@@ -57,9 +57,9 @@ body.preview-shell {
   flex-shrink: 0;
   padding: 0.2rem 0.55rem;
   border-radius: 999px;
-  background: rgba(255, 107, 0, 0.18);
-  border: 1px solid rgba(255, 107, 0, 0.35);
-  color: #ffb366;
+  background: rgba(0, 87, 184, 0.18);
+  border: 1px solid rgba(0, 87, 184, 0.35);
+  color: #4da3ff;
   font-size: 0.6875rem;
   font-weight: 700;
   letter-spacing: 0.04em;
@@ -160,13 +160,13 @@ body.preview-shell {
 }
 
 .preview-bar__cta {
-  background: #ff6b00;
+  background: #0057b8;
   color: #fff;
-  border: 1px solid #e85d00;
+  border: 1px solid #003d82;
 }
 
 .preview-bar__cta:hover {
-  background: #e85d00;
+  background: #003d82;
 }
 
 .preview-bar__cta svg {

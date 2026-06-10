@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /site/
+Allow: /assets/
+Disallow: /
+
+Sitemap: https://tofariasti.github.io/performance-hyosung/sitemap.xml
