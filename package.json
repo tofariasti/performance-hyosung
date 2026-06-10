@@ -1,0 +1,17 @@
+{
+  "name": "performance-hyosung",
+  "version": "1.0.0",
+  "description": "Landing page Performance Hyosung — oficina de motos em Porto Alegre/RS",
+  "type": "module",
+  "scripts": {
+    "build:css": "tailwindcss -i ./assets/css/input.css -o ./assets/css/output.css --minify",
+    "build": "npm run build:css",
+    "watch:css": "tailwindcss -i ./assets/css/input.css -o ./assets/css/output.css --watch",
+    "sync:instagram": "python3 scripts/sync-instagram.py || node scripts/sync-instagram-puppeteer.mjs",
+    "capture:marketing": "node scripts/capture-marketing-screenshots.mjs"
+  },
+  "devDependencies": {
+    "puppeteer-core": "^24.36.1",
+    "tailwindcss": "^3.4.17"
+  }
+}
